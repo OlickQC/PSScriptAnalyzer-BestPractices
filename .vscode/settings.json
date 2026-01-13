@@ -1,0 +1,152 @@
+{
+    // ========================================
+    // PSScriptAnalyzer Configuration
+    // ========================================
+    
+    // Enable script analysis
+    "powershell.scriptAnalysis.enable": true,
+    
+    // Use custom settings file
+    "powershell.scriptAnalysis.settingsPath": "PSScriptAnalyzerSettings.psd1",
+    
+    // ========================================
+    // PowerShell Code Formatting
+    // ========================================
+    
+    // Use custom formatting preset
+    "powershell.codeFormatting.preset": "Custom",
+    
+    // Enforce correct casing for cmdlets/functions (PascalCase)
+    "powershell.codeFormatting.useCorrectCasing": true,
+    
+    // K&R style: Opening brace on same line
+    "powershell.codeFormatting.openBraceOnSameLine": true,
+    
+    // New line after opening brace
+    "powershell.codeFormatting.newLineAfterOpenBrace": true,
+    
+    // New line after closing brace
+    "powershell.codeFormatting.newLineAfterCloseBrace": true,
+    
+    // Pipeline formatting
+    "powershell.codeFormatting.pipelineIndentationStyle": "IncreaseIndentationForFirstPipeline",
+    
+    // Whitespace before opening brace
+    "powershell.codeFormatting.whitespaceBeforeOpenBrace": true,
+    
+    // Whitespace before opening parenthesis
+    "powershell.codeFormatting.whitespaceBeforeOpenParen": true,
+    
+    // Whitespace around operators
+    "powershell.codeFormatting.whitespaceAroundOperator": true,
+    
+    // Whitespace after separator (comma)
+    "powershell.codeFormatting.whitespaceAfterSeparator": true,
+    
+    // Whitespace between parameters
+    "powershell.codeFormatting.whitespaceInsideBrace": true,
+    
+    // Ignore one-line blocks
+    "powershell.codeFormatting.ignoreOneLineBlock": true,
+    
+    // Align assignment statements
+    "powershell.codeFormatting.alignPropertyValuePairs": true,
+    
+    // Use consistent whitespace
+    "powershell.codeFormatting.useConstantStrings": false,
+    
+    // Use correct line endings
+    "powershell.codeFormatting.addWhitespaceAroundPipe": true,
+    
+    // ========================================
+    // PowerShell-Specific Editor Settings
+    // ========================================
+    
+    "[powershell]": {
+        // Use spaces (not tabs)
+        "editor.insertSpaces": true,
+        
+        // 4-space indentation
+        "editor.tabSize": 4,
+        
+        // Detect indentation from content
+        "editor.detectIndentation": false,
+        
+        // Show ruler at 115 characters (max line length)
+        "editor.rulers": [
+            115
+        ],
+        
+        // Format document on save
+        "editor.formatOnSave": true,
+        
+        // Format while typing
+        "editor.formatOnType": false,
+        
+        // Trim trailing whitespace on save
+        "files.trimTrailingWhitespace": true,
+        
+        // Insert final newline
+        "files.insertFinalNewline": true,
+        
+        // Trim final newlines
+        "files.trimFinalNewlines": true,
+        
+        // Word wrap at rulers
+        "editor.wordWrap": "off",
+        
+        // Show whitespace characters
+        "editor.renderWhitespace": "boundary",
+        
+        // Bracket pair colorization
+        "editor.bracketPairColorization.enabled": true,
+        
+        // Show matching brackets
+        "editor.matchBrackets": "always",
+        
+        // Enable code lens
+        "editor.codeLens": true,
+        
+        // Suggestions on trigger characters
+        "editor.suggest.snippetsPreventQuickSuggestions": false
+    },
+    
+    // ========================================
+    // File Associations
+    // ========================================
+    
+    "files.associations": {
+        "*.ps1": "powershell",
+        "*.psm1": "powershell",
+        "*.psd1": "powershell",
+        "*.ps1xml": "xml"
+    },
+    
+    // ========================================
+    // Line Endings
+    // ========================================
+    
+    // Use CRLF on Windows, LF on Unix (auto-detect)
+    "files.eol": "auto",
+    
+    // ========================================
+    // Integrated Terminal
+    // ========================================
+    
+    // Default shell for Windows
+    "terminal.integrated.defaultProfile.windows": "PowerShell",
+    
+    // ========================================
+    // Problems Panel
+    // ========================================
+    
+    // Show problems for all open files
+    "problems.showCurrentInStatus": true,
+    
+    // ========================================
+    // IntelliSense
+    // ========================================
+    
+    "powershell.integratedConsole.showOnStartup": false,
+    "powershell.integratedConsole.focusConsoleOnExecute": false
+}

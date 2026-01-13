@@ -163,7 +163,6 @@ function Get-DataContent {
 
 ## Documentation
 
-- **[AGENTS.md](AGENTS.md)** - Complete PowerShell standards and best practices guide
 - **[README-PSScriptAnalyzer.md](README-PSScriptAnalyzer.md)** - Detailed PSScriptAnalyzer configuration documentation
 - **[CONTRIBUTING.md](CONTRIBUTING.md)** - Contribution guidelines
 

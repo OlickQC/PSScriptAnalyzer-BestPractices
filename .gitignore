@@ -1,0 +1,68 @@
+# PowerShell
+*.ps1xml
+*.psd1.bak
+*.psm1.bak
+*.ps1.bak
+
+# VS Code
+.vscode/launch.json
+.vscode/tasks.json
+.vscode/.ropeproject
+
+# Testing
+TestResults/
+*.trx
+*.coverage
+coverage/
+
+# Build artifacts
+bin/
+obj/
+*.dll
+*.exe
+*.pdb
+
+# Temporary files
+*.tmp
+*.temp
+*~
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# PSScriptAnalyzer temporary files
+ScriptAnalyzerResults.sarif
+*.sarif
+
+# Pester
+*.Tests.ps1.coverage.xml
+
+# Personal notes (keep local notes private)
+NOTES.md
+TODO.md
+SCRATCH.md
+
+# Environment-specific
+.env
+.env.local
+.env.*.local
+
+# Windows
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Linux
+*~
+.directory
+
+# Logs
+*.log
+logs/
+
+# Dependencies (if using PSDepend or similar)
+PSDepend/

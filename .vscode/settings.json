@@ -7,7 +7,7 @@
     "powershell.scriptAnalysis.enable": true,
     
     // Use custom settings file
-    "powershell.scriptAnalysis.settingsPath": "PSScriptAnalyzerSettings.psd1",
+    "powershell.scriptAnalysis.settingsPath": "ScriptAnalyzer/PSScriptAnalyzerSettings.psd1",
     
     // ========================================
     // PowerShell Code Formatting

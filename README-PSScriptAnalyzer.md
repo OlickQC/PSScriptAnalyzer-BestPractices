@@ -31,29 +31,29 @@ This document provides comprehensive documentation for the PSScriptAnalyzer conf
 
 3. **Test the configuration**:
    ```powershell
-   Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\PSScriptAnalyzerSettings.psd1
+   Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
    ```
 
 ### Running Analysis
 
 **Single file**:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\PSScriptAnalyzerSettings.psd1
+Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
 ```
 
 **Entire directory (recursive)**:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\MyModule\ -Recurse -Settings .\PSScriptAnalyzerSettings.psd1
+Invoke-ScriptAnalyzer -Path .\MyModule\ -Recurse -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
 ```
 
 **Filter by severity**:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\PSScriptAnalyzerSettings.psd1 -Severity Error
+Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1 -Severity Error
 ```
 
 **Export results to file**:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\PSScriptAnalyzerSettings.psd1 | 
+Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1 | 
     Export-Csv -Path .\AnalysisResults.csv -NoTypeInformation
 ```
 
@@ -65,8 +65,8 @@ Invoke-ScriptAnalyzer -Path .\Script.ps1 -Settings .\PSScriptAnalyzerSettings.ps
 
 | File | Purpose |
 |------|---------|
-| `PSScriptAnalyzerSettings.psd1` | Main configuration with 50+ built-in rules |
-| `CustomRules/CustomRules.psm1` | 4 custom rules for additional validation |
+| `ScriptAnalyzer/PSScriptAnalyzerSettings.psd1` | Main configuration with 50+ built-in rules |
+| `ScriptAnalyzer/CustomRules/CustomRules.psm1` | 4 custom rules for additional validation |
 | `.vscode/settings.json` | VS Code workspace integration settings |
 | `AGENTS.md` | Complete PowerShell standards documentation |
 
@@ -326,7 +326,7 @@ function Get-UserData {
    - Search for "PowerShell"
    - Install "PowerShell" by Microsoft
 
-2. **Copy `.vscode/settings.json`** to your project (or use workspace settings)
+2. **Copy `.vscode/settings.json` and `ScriptAnalyzer/` folder** to your project (or use workspace settings)
 
 3. **Reload VS Code** (Ctrl+Shift+P → "Reload Window")
 
@@ -511,19 +511,19 @@ catch [System.IO.FileNotFoundException] {
 
 1. **Verify CustomRules path**:
    ```powershell
-   Test-Path .\CustomRules\CustomRules.psm1
+   Test-Path .\ScriptAnalyzer\CustomRules\CustomRules.psm1
    ```
 
 2. **Test custom rules manually**:
    ```powershell
    Invoke-ScriptAnalyzer -Path .\YourScript.ps1 `
-       -CustomRulePath .\CustomRules\CustomRules.psm1 `
+       -CustomRulePath .\ScriptAnalyzer\CustomRules\CustomRules.psm1 `
        -IncludeDefaultRules
    ```
 
 3. **Check for syntax errors in CustomRules.psm1**:
    ```powershell
-   Import-Module .\CustomRules\CustomRules.psm1 -Force
+   Import-Module .\ScriptAnalyzer\CustomRules\CustomRules.psm1 -Force
    Get-Command -Module CustomRules
    ```
 
@@ -548,6 +548,7 @@ catch [System.IO.FileNotFoundException] {
 3. **Exclude compatibility checks**:
    Compatibility rules are slow. If not needed, disable in settings file:
    ```powershell
+   # In ScriptAnalyzer/PSScriptAnalyzerSettings.psd1
    ExcludeRules = @(
        'PSUseCompatibleSyntax'
        'PSUseCompatibleCmdlets'
@@ -570,7 +571,7 @@ catch [System.IO.FileNotFoundException] {
    ```
 
 2. **Exclude rule globally** (if consistently problematic):
-   Add to `PSScriptAnalyzerSettings.psd1`:
+   Add to `ScriptAnalyzer/PSScriptAnalyzerSettings.psd1`:
    ```powershell
    ExcludeRules = @('RuleName')
    ```
@@ -606,7 +607,7 @@ Invoke-ScriptAnalyzer -Path .\MyModule\ -Recurse -Settings .\PSScriptAnalyzerSet
 
 ### Adding New Custom Rules
 
-1. **Edit `CustomRules/CustomRules.psm1`**
+1. **Edit `ScriptAnalyzer/CustomRules/CustomRules.psm1`**
 
 2. **Create new function**:
    ```powershell
@@ -633,13 +634,13 @@ Invoke-ScriptAnalyzer -Path .\MyModule\ -Recurse -Settings .\PSScriptAnalyzerSet
 
 4. **Test the rule**:
    ```powershell
-   Import-Module .\CustomRules\CustomRules.psm1 -Force
-   Invoke-ScriptAnalyzer -Path .\TestScript.ps1 -CustomRulePath .\CustomRules\CustomRules.psm1
+   Import-Module .\ScriptAnalyzer\CustomRules\CustomRules.psm1 -Force
+   Invoke-ScriptAnalyzer -Path .\TestScript.ps1 -CustomRulePath .\ScriptAnalyzer\CustomRules\CustomRules.psm1
    ```
 
 ### Modifying Existing Rules
 
-1. **Edit `PSScriptAnalyzerSettings.psd1`**
+1. **Edit `ScriptAnalyzer/PSScriptAnalyzerSettings.psd1`**
 
 2. **Find the rule** in the `Rules = @{}` section
 
@@ -653,7 +654,7 @@ Invoke-ScriptAnalyzer -Path .\MyModule\ -Recurse -Settings .\PSScriptAnalyzerSet
 
 4. **Test changes**:
    ```powershell
-   Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\PSScriptAnalyzerSettings.psd1
+   Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
    ```
 
 5. **Reload VS Code** to apply changes

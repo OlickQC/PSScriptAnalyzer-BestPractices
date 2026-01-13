@@ -43,14 +43,13 @@ Production-ready PSScriptAnalyzer configuration and custom rules that enforce Po
    
    **Option A:** Copy files to your project root
    ```powershell
-   Copy-Item PSScriptAnalyzerSettings.psd1 <YourProjectPath>\
-   Copy-Item -Recurse CustomRules\ <YourProjectPath>\
+   Copy-Item -Recurse ScriptAnalyzer\ <YourProjectPath>\
    Copy-Item -Recurse .vscode\ <YourProjectPath>\
    ```
 
    **Option B:** Reference settings from this repository
    ```powershell
-   Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\PSScriptAnalyzer-BestPractices\PSScriptAnalyzerSettings.psd1
+   Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\PSScriptAnalyzer-BestPractices\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
    ```
 
 ### Usage
@@ -59,17 +58,17 @@ Production-ready PSScriptAnalyzer configuration and custom rules that enforce Po
 
 Run analysis on a single file:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\PSScriptAnalyzerSettings.psd1
+Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
 ```
 
 Run analysis on an entire directory:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\YourModule\ -Recurse -Settings .\PSScriptAnalyzerSettings.psd1
+Invoke-ScriptAnalyzer -Path .\YourModule\ -Recurse -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1
 ```
 
 Filter by severity:
 ```powershell
-Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\PSScriptAnalyzerSettings.psd1 -Severity Error,Warning
+Invoke-ScriptAnalyzer -Path .\YourScript.ps1 -Settings .\ScriptAnalyzer\PSScriptAnalyzerSettings.psd1 -Severity Error,Warning
 ```
 
 #### Visual Studio Code
@@ -86,8 +85,8 @@ If you copied `.vscode/settings.json` to your project, PSScriptAnalyzer will aut
 
 | File | Description |
 |------|-------------|
-| `PSScriptAnalyzerSettings.psd1` | Main configuration with 50+ rules enforcing best practices |
-| `CustomRules/CustomRules.psm1` | Custom rules for advanced validation |
+| `ScriptAnalyzer/PSScriptAnalyzerSettings.psd1` | Main configuration with 50+ rules enforcing best practices |
+| `ScriptAnalyzer/CustomRules/CustomRules.psm1` | Custom rules for advanced validation |
 | `.vscode/settings.json` | VS Code workspace settings for seamless integration |
 | `AGENTS.md` | Complete PowerShell style guide and standards documentation |
 

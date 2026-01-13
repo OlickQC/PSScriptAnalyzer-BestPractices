@@ -9,8 +9,12 @@
     # Include default PSScriptAnalyzer rules plus custom rules
     IncludeDefaultRules = $true
     
-    # Path to custom rules module
-    CustomRulePath = @('.\CustomRules')
+    # Path to custom rules module (relative to project root when running from root)
+    # Or specify absolute path when calling Invoke-ScriptAnalyzer with -CustomRulePath
+    # When used from root: .\ScriptAnalyzer\CustomRules
+    # When settings file is in project: .\CustomRules (relative to settings file location)
+    # Leave empty and specify via -CustomRulePath parameter for flexibility
+    CustomRulePath = @()
     
     # Exclude specific rules if needed (currently none excluded)
     ExcludeRules = @()

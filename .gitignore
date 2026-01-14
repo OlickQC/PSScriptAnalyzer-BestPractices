@@ -67,3 +67,5 @@ logs/
 # Dependencies (if using PSDepend or similar)
 PSDepend/
 *AGENTS.md
+*CONTRUBUTING.md
+src/*

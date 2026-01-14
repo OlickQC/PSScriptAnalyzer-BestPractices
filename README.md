@@ -79,6 +79,39 @@ If you copied `.vscode/settings.json` to your project, PSScriptAnalyzer will aut
 - Apply formatting on save (Ctrl+S)
 - Format document on command (Shift+Alt+F)
 
+#### Azure DevOps Pipeline
+
+Automate code quality checks in your CI/CD pipeline with the included Azure DevOps configuration:
+
+**Features:**
+- ✅ Tests against **PowerShell 5.1** (Windows) and **PowerShell 7.x** (Linux) in parallel
+- ✅ Runs on every Pull Request to main/develop branches
+- ✅ Generates **NUnit XML** test results visible in Azure DevOps Tests tab
+- ✅ Generates **HTML reports** published as pipeline artifacts
+- ✅ Automatically **formats code** if violations are detected (optional)
+- ✅ Fails build on Error-level violations
+
+**Quick Setup:**
+1. Copy `azure-pipelines.yml` to your repository root
+2. Copy the `build/` folder to your repository
+3. Configure the pipeline in Azure DevOps to use the YAML file
+4. Create a Pull Request - pipeline runs automatically!
+
+**Pipeline Structure:**
+```yaml
+Stage 1: Code Analysis (Matrix)
+  ├─ Job: PowerShell 5.1 (Windows) → Analyze + Test Results + HTML Report
+  └─ Job: PowerShell 7.x (Linux)   → Analyze + Test Results + HTML Report
+
+Stage 2: Auto-Format (if Stage 1 fails)
+  └─ Job: Format Code → Apply formatting rules → Commit changes
+
+Stage 3: Summary
+  └─ Job: Aggregate results and display summary
+```
+
+See [azure-pipelines.yml](azure-pipelines.yml) for full documentation and configuration options.
+
 ## What's Included
 
 ### Configuration Files
@@ -88,7 +121,24 @@ If you copied `.vscode/settings.json` to your project, PSScriptAnalyzer will aut
 | `ScriptAnalyzer/PSScriptAnalyzerSettings.psd1` | Main configuration with 50+ rules enforcing best practices |
 | `ScriptAnalyzer/CustomRules/CustomRules.psm1` | Custom rules for advanced validation |
 | `.vscode/settings.json` | VS Code workspace settings for seamless integration |
+| `azure-pipelines.yml` | Azure DevOps pipeline for automated code quality checks |
 | `AGENTS.md` | Complete PowerShell style guide and standards documentation |
+
+### Pipeline & Build Scripts
+
+| File | Description |
+|------|-------------|
+| `build/Invoke-CodeAnalysis.ps1` | Main analysis orchestration script |
+| `build/ConvertTo-NUnitXml.ps1` | Converts analysis results to NUnit XML for Azure DevOps |
+| `build/ConvertTo-HtmlReport.ps1` | Generates styled HTML reports as artifacts |
+| `build/Invoke-AutoFormat.ps1` | Automatically formats PowerShell code |
+
+### Example Code
+
+| Folder | Description |
+|--------|-------------|
+| `src/Public/` | Example public functions demonstrating best practices |
+| `src/Private/` | Example private helper functions |
 
 ### Rules Enforced
 

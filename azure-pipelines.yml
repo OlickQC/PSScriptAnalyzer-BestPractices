@@ -1,0 +1,306 @@
+# Azure DevOps Pipeline for PSScriptAnalyzer Code Quality
+# Tests against PowerShell 5.1 and PowerShell 7.x in parallel
+# Generates test results and HTML reports
+
+trigger: none  # Only run on Pull Requests
+
+pr:
+  branches:
+    include:
+      - main
+      - develop
+      - feature/*
+  paths:
+    include:
+      - 'src/**'
+      - 'ScriptAnalyzer/**'
+      - 'build/**'
+
+variables:
+  # Analysis configuration
+  AnalyzeFolder: 'src'
+  SettingsFile: 'ScriptAnalyzer/PSScriptAnalyzerSettings.psd1'
+  CustomRulesPath: 'ScriptAnalyzer/CustomRules'
+  BuildScriptsPath: 'build'
+  
+  # Failure threshold (Error, Warning, or Information)
+  FailOnSeverity: 'Error'
+  
+  # Report configuration
+  GenerateHtmlReport: true
+  GenerateNUnitReport: true
+
+stages:
+  # ============================================================
+  # STAGE 1: CODE ANALYSIS (Multi-Version Matrix)
+  # ============================================================
+  - stage: CodeAnalysis
+    displayName: 'Code Quality Analysis'
+    jobs:
+      - job: Analyze
+        displayName: 'PSScriptAnalyzer Analysis'
+        strategy:
+          matrix:
+            PS51_Windows:
+              poolImage: 'windows-latest'
+              pwshCommand: 'powershell'
+              psVersion: '5.1'
+              psDisplayName: 'PowerShell 5.1'
+            PS7_Linux:
+              poolImage: 'ubuntu-latest'
+              pwshCommand: 'pwsh'
+              psVersion: '7.x'
+              psDisplayName: 'PowerShell 7.x'
+        
+        pool:
+          vmImage: $(poolImage)
+        
+        steps:
+          # Step 1: Checkout repository
+          - checkout: self
+            displayName: 'Checkout Repository'
+          
+          # Step 2: Display PowerShell version
+          - task: PowerShell@2
+            displayName: 'Display PowerShell Version'
+            inputs:
+              targetType: 'inline'
+              pwsh: ${{ eq(variables.pwshCommand, 'pwsh') }}
+              script: |
+                Write-Host "##[section]PowerShell Version Information"
+                $PSVersionTable | Format-Table -AutoSize
+                Write-Host ""
+                Write-Host "Edition: $($PSVersionTable.PSEdition)"
+                Write-Host "Version: $($PSVersionTable.PSVersion)"
+                Write-Host "OS: $($PSVersionTable.OS)"
+          
+          # Step 3: Install PSScriptAnalyzer module
+          - task: PowerShell@2
+            displayName: 'Install PSScriptAnalyzer Module'
+            inputs:
+              targetType: 'inline'
+              pwsh: ${{ eq(variables.pwshCommand, 'pwsh') }}
+              script: |
+                Write-Host "##[section]Installing PSScriptAnalyzer"
+                Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -Repository PSGallery -Verbose
+                
+                Write-Host ""
+                Write-Host "##[section]Installed Module Information"
+                Get-Module -Name PSScriptAnalyzer -ListAvailable | Format-Table -AutoSize
+          
+          # Step 4: Validate paths exist
+          - task: PowerShell@2
+            displayName: 'Validate Paths'
+            inputs:
+              targetType: 'inline'
+              pwsh: ${{ eq(variables.pwshCommand, 'pwsh') }}
+              script: |
+                Write-Host "##[section]Validating Required Paths"
+                
+                $PathsToCheck = @(
+                    "$(Build.SourcesDirectory)/$(AnalyzeFolder)",
+                    "$(Build.SourcesDirectory)/$(SettingsFile)",
+                    "$(Build.SourcesDirectory)/$(CustomRulesPath)",
+                    "$(Build.SourcesDirectory)/$(BuildScriptsPath)"
+                )
+                
+                $AllValid = $true
+                foreach ($Path in $PathsToCheck) {
+                    if (Test-Path $Path) {
+                        Write-Host "✓ Found: $Path" -ForegroundColor Green
+                    } else {
+                        Write-Host "✗ Missing: $Path" -ForegroundColor Red
+                        $AllValid = $false
+                    }
+                }
+                
+                if (-not $AllValid) {
+                    Write-Host "##vso[task.logissue type=error]Required paths are missing"
+                    exit 1
+                }
+          
+          # Step 5: Run PSScriptAnalyzer analysis
+          - task: PowerShell@2
+            displayName: 'Run Code Analysis ($(psDisplayName))'
+            inputs:
+              targetType: 'filePath'
+              filePath: '$(BuildScriptsPath)/Invoke-CodeAnalysis.ps1'
+              pwsh: ${{ eq(variables.pwshCommand, 'pwsh') }}
+              arguments: >-
+                -Path "$(Build.SourcesDirectory)/$(AnalyzeFolder)"
+                -SettingsPath "$(Build.SourcesDirectory)/$(SettingsFile)"
+                -CustomRulePath "$(Build.SourcesDirectory)/$(CustomRulesPath)"
+                -OutputPath "$(Build.ArtifactStagingDirectory)"
+                -FailOnSeverity "$(FailOnSeverity)"
+                -GenerateHtmlReport:$${{ variables.GenerateHtmlReport }}
+                -GenerateNUnitReport:$${{ variables.GenerateNUnitReport }}
+                -PSVersion "$(psVersion)"
+              workingDirectory: '$(Build.SourcesDirectory)'
+            continueOnError: false
+          
+          # Step 6: Publish test results (NUnit XML)
+          - task: PublishTestResults@2
+            displayName: 'Publish Test Results ($(psDisplayName))'
+            inputs:
+              testResultsFormat: 'NUnit'
+              testResultsFiles: '$(Build.ArtifactStagingDirectory)/**/PSScriptAnalyzer-*.xml'
+              mergeTestResults: false
+              failTaskOnFailedTests: true
+              testRunTitle: 'PSScriptAnalyzer - $(psDisplayName)'
+              buildConfiguration: '$(psDisplayName)'
+            condition: and(succeededOrFailed(), eq(variables.GenerateNUnitReport, true))
+          
+          # Step 7: Publish HTML report as artifact
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish HTML Report ($(psDisplayName))'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: 'PSScriptAnalyzer-Report-$(psVersion)'
+              publishLocation: 'pipeline'
+            condition: and(succeededOrFailed(), eq(variables.GenerateHtmlReport, true))
+
+  # ============================================================
+  # STAGE 2: AUTO-FORMAT (Only if analysis fails)
+  # ============================================================
+  - stage: AutoFormat
+    displayName: 'Auto-Format Code'
+    dependsOn: CodeAnalysis
+    condition: failed()  # Only run if CodeAnalysis stage fails
+    jobs:
+      - job: FormatCode
+        displayName: 'Apply PSScriptAnalyzer Formatting'
+        pool:
+          vmImage: 'ubuntu-latest'  # Use PS 7 for better formatting support
+        
+        steps:
+          # Step 1: Checkout with credentials (required for push)
+          - checkout: self
+            persistCredentials: true
+            displayName: 'Checkout Repository (with credentials)'
+          
+          # Step 2: Install PSScriptAnalyzer
+          - task: PowerShell@2
+            displayName: 'Install PSScriptAnalyzer Module'
+            inputs:
+              targetType: 'inline'
+              pwsh: true
+              script: |
+                Install-Module -Name PSScriptAnalyzer -Force -Scope CurrentUser -Repository PSGallery
+          
+          # Step 3: Run auto-format
+          - task: PowerShell@2
+            displayName: 'Format PowerShell Files'
+            inputs:
+              targetType: 'filePath'
+              filePath: '$(BuildScriptsPath)/Invoke-AutoFormat.ps1'
+              pwsh: true
+              arguments: >-
+                -Path "$(Build.SourcesDirectory)/$(AnalyzeFolder)"
+                -SettingsPath "$(Build.SourcesDirectory)/$(SettingsFile)"
+                -OutputPath "$(Build.ArtifactStagingDirectory)/format-summary.txt"
+              workingDirectory: '$(Build.SourcesDirectory)'
+          
+          # Step 4: Check if files were modified
+          - task: PowerShell@2
+            displayName: 'Detect Changes'
+            name: DetectChanges
+            inputs:
+              targetType: 'inline'
+              pwsh: true
+              script: |
+                $Changes = git status --porcelain
+                if ($Changes) {
+                    Write-Host "##[section]Files Modified by Auto-Format:"
+                    Write-Host $Changes
+                    Write-Host "##vso[task.setvariable variable=HasChanges;isOutput=true]true"
+                } else {
+                    Write-Host "No files were modified by auto-format"
+                    Write-Host "##vso[task.setvariable variable=HasChanges;isOutput=true]false"
+                }
+          
+          # Step 5: Commit and push formatted code
+          - task: PowerShell@2
+            displayName: 'Commit Formatted Code'
+            inputs:
+              targetType: 'inline'
+              pwsh: true
+              script: |
+                # Configure git
+                git config user.name "Azure Pipeline"
+                git config user.email "pipeline@azuredevops.com"
+                
+                # Stage all changes
+                git add .
+                
+                # Commit with [skip ci] to prevent infinite loop
+                git commit -m "ci: Auto-format PowerShell files with PSScriptAnalyzer [skip ci]"
+                
+                # Push to PR source branch
+                git push origin HEAD:$(System.PullRequest.SourceBranch)
+                
+                Write-Host "##[section]Formatted code committed and pushed successfully"
+            condition: and(succeeded(), eq(variables['DetectChanges.HasChanges'], 'true'))
+          
+          # Step 6: Publish format summary
+          - task: PublishPipelineArtifact@1
+            displayName: 'Publish Format Summary'
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)'
+              artifact: 'AutoFormat-Summary'
+              publishLocation: 'pipeline'
+            condition: succeededOrFailed()
+
+  # ============================================================
+  # STAGE 3: SUMMARY REPORT
+  # ============================================================
+  - stage: Summary
+    displayName: 'Generate Summary Report'
+    dependsOn:
+      - CodeAnalysis
+      - AutoFormat
+    condition: always()  # Always run, even if previous stages fail
+    jobs:
+      - job: Report
+        displayName: 'Aggregate Results'
+        pool:
+          vmImage: 'ubuntu-latest'
+        
+        steps:
+          # Step 1: Download all artifacts
+          - task: DownloadPipelineArtifact@2
+            displayName: 'Download All Artifacts'
+            inputs:
+              buildType: 'current'
+              targetPath: '$(Pipeline.Workspace)/artifacts'
+            continueOnError: true
+          
+          # Step 2: Display summary
+          - task: PowerShell@2
+            displayName: 'Display Pipeline Summary'
+            inputs:
+              targetType: 'inline'
+              pwsh: true
+              script: |
+                Write-Host "##[section]PSScriptAnalyzer Pipeline Summary"
+                Write-Host "======================================================"
+                Write-Host ""
+                Write-Host "Build ID: $(Build.BuildId)"
+                Write-Host "Build Number: $(Build.BuildNumber)"
+                Write-Host "Source Branch: $(Build.SourceBranch)"
+                Write-Host "Triggered By: $(Build.RequestedFor)"
+                Write-Host ""
+                Write-Host "PowerShell Versions Tested:"
+                Write-Host "  - PowerShell 5.1 (Windows)"
+                Write-Host "  - PowerShell 7.x (Linux)"
+                Write-Host ""
+                Write-Host "Analysis Scope: $(AnalyzeFolder)"
+                Write-Host "Failure Threshold: $(FailOnSeverity)"
+                Write-Host ""
+                Write-Host "Reports Generated:"
+                Write-Host "  - NUnit XML (Test Results)"
+                Write-Host "  - HTML Report (Artifacts)"
+                Write-Host ""
+                Write-Host "======================================================"
+                Write-Host ""
+                Write-Host "Check the 'Tests' tab for detailed violation reports"
+                Write-Host "Download HTML reports from 'Artifacts' for offline viewing"
